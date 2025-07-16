@@ -1,4 +1,4 @@
-import { BASE_URL } from "@/constants/api";
+import { BASE_URL, N8N_URL } from "@/constants/api";
 import axios from "axios";
 
 export const api = axios.create({
@@ -9,7 +9,7 @@ export const api = axios.create({
   },
 });
 export const api2 = axios.create({
-  baseURL: "http://localhost:5678",
+  baseURL: N8N_URL,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
