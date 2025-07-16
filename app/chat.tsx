@@ -1,4 +1,5 @@
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { sendChatPrompt } from "@/services/api";
 import { useRef, useState } from "react";
 import {
   FlatList,
@@ -15,17 +16,29 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const flatListRef = useRef<FlatList<any>>(null);
+  const [loading, setLoading] = useState(false);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (input.trim() === "") return;
-    setMessages((prev) => [
-      ...prev,
-      { id: Date.now().toString(), text: input, fromMe: true },
-    ]);
+    console.log("Sending prompt:", input);
+    setMessages((prev) => [...prev, { text: input, fromMe: true }]);
     setInput("");
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+    setLoading(true);
+    try {
+      const data = await sendChatPrompt(input);
+      console.log("API response:", data);
+      if (data.output) {
+        setMessages((prev) => [...prev, { text: data.output, fromMe: false }]);
+      }
+    } catch (e) {
+      console.log("API error:", e);
+      setMessages((prev) => [
+        ...prev,
+        { text: "Erreur réseau ou serveur.", fromMe: false },
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -70,11 +83,12 @@ export default function ChatScreen() {
               onChangeText={setInput}
               onSubmitEditing={sendMessage}
               returnKeyType="send"
+              editable={!loading}
             />
             <TouchableOpacity
               onPress={sendMessage}
               className="bg-[#22347C] rounded-full p-2"
-              disabled={input.trim() === ""}
+              disabled={input.trim() === "" || loading}
             >
               <IconSymbol name="paperplane.fill" size={24} color="#fff" />
             </TouchableOpacity>

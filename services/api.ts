@@ -7,4 +7,20 @@ export const api = axios.create({
     "Content-Type": "application/json",
     Accept: "application/json",
   },
-}); 
+});
+export const api2 = axios.create({
+  baseURL: "http://localhost:5678",
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
+});
+
+export const sendChatPrompt = async (prompt: string) => {
+  const response = await api2.post(
+    "/webhook-test/cosap_chat",
+    { prompt },
+    { headers: { idUser: "24" } }
+  );
+  return response.data;
+}; 

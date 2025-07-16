@@ -1,5 +1,6 @@
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { signIn } from "@/services/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -28,6 +29,10 @@ export default function SignInScreen() {
       if (data.token) {
         setSuccess("Sign in successful!");
         console.log(data);
+        // Save credentials
+        await AsyncStorage.setItem("userToken", data.token);
+        await AsyncStorage.setItem("userId", data.id);
+        router.push("/chat");
       } else {
         setError(data.message || "Sign in failed");
       }
