@@ -1,5 +1,5 @@
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { sendChatPrompt } from "@/services/api";
+import { sendChatPrompt } from "@/services/chat";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRef, useState } from "react";
 import {
