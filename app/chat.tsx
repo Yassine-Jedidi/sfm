@@ -1,5 +1,6 @@
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { sendChatPrompt } from "@/services/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRef, useState } from "react";
 import {
   FlatList,
@@ -25,7 +26,9 @@ export default function ChatScreen() {
     setInput("");
     setLoading(true);
     try {
-      const data = await sendChatPrompt(input);
+      const token = await AsyncStorage.getItem("userToken");
+      const userId = await AsyncStorage.getItem("userId");
+      const data = await sendChatPrompt(input, token || "", userId || "");
       console.log("API response:", data);
       if (data.output) {
         setMessages((prev) => [...prev, { text: data.output, fromMe: false }]);
