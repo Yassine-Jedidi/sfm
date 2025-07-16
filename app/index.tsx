@@ -36,12 +36,6 @@ export default function HomeScreen() {
           <Text className="text-white font-semibold">Sign In</Text>
         </TouchableOpacity>
       </View>
-      <TouchableOpacity
-        className="bg-[#4CAF50] px-6 py-3 rounded-full mt-6"
-        onPress={() => router.push("/chat")}
-      >
-        <Text className="text-white font-semibold">Chat</Text>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }

@@ -31,7 +31,7 @@ export default function SignInScreen() {
         console.log(data);
         // Save credentials
         await AsyncStorage.setItem("userToken", data.token);
-        await AsyncStorage.setItem("userId", data.id);
+        await AsyncStorage.setItem("userId", data.id.toString());
         router.push("/chat");
       } else {
         setError(data.message || "Sign in failed");
