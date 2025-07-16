@@ -71,15 +71,17 @@ export default function SignInScreen() {
         </Text>
         <View className="w-full max-w-xs mb-4">
           <TextInput
-            placeholder="Email"
+            placeholder="Username"
+            placeholderTextColor="#D0D4E6"
             className="border border-gray-300 rounded px-4 py-2 mb-4"
-            keyboardType="email-address"
+            keyboardType="default"
             autoCapitalize="none"
             value={username}
             onChangeText={setUsername}
           />
           <TextInput
             placeholder="Password"
+            placeholderTextColor="#D0D4E6"
             className="border border-gray-300 rounded px-4 py-2 mb-6"
             secureTextEntry
             value={password}
