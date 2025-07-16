@@ -1,5 +1,7 @@
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { signIn } from "@/services/auth";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import {
   SafeAreaView,
   Text,
@@ -11,6 +13,31 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 
 export default function SignInScreen() {
   const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleSignIn = async () => {
+    setLoading(true);
+    setError("");
+    setSuccess("");
+    try {
+      const data = await signIn(username, password);
+      if (data.token) {
+        setSuccess("Sign in successful!");
+        console.log(data);
+      } else {
+        setError(data.message || "Sign in failed");
+      }
+    } catch (e) {
+      setError("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <KeyboardAwareScrollView
@@ -43,14 +70,28 @@ export default function SignInScreen() {
             className="border border-gray-300 rounded px-4 py-2 mb-4"
             keyboardType="email-address"
             autoCapitalize="none"
+            value={username}
+            onChangeText={setUsername}
           />
           <TextInput
             placeholder="Password"
             className="border border-gray-300 rounded px-4 py-2 mb-6"
             secureTextEntry
+            value={password}
+            onChangeText={setPassword}
           />
-          <TouchableOpacity className="bg-[#22347C] py-3 rounded-full items-center">
-            <Text className="text-white font-semibold">Sign In</Text>
+          {error ? <Text className="text-red-500 mb-2">{error}</Text> : null}
+          {success ? (
+            <Text className="text-green-600 mb-2">{success}</Text>
+          ) : null}
+          <TouchableOpacity
+            className="bg-[#22347C] py-3 rounded-full items-center"
+            onPress={handleSignIn}
+            disabled={loading}
+          >
+            <Text className="text-white font-semibold">
+              {loading ? "Signing In..." : "Sign In"}
+            </Text>
           </TouchableOpacity>
         </View>
       </KeyboardAwareScrollView>

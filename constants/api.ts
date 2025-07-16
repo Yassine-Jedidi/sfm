@@ -1,0 +1,1 @@
+export const BASE_URL = "https://demo-cosap-v3.sfmtechnologies.com/api/";
