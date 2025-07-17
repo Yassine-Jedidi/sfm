@@ -1,3 +1,4 @@
+import MicrophoneButton from "@/components/MicrophoneButton";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { sendChatPrompt } from "@/services/chat";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -44,6 +45,10 @@ export default function ChatScreen() {
     }
   };
 
+  const handleTextRecognized = (text: string) => {
+    setInput(text);
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <KeyboardAvoidingView
@@ -87,6 +92,11 @@ export default function ChatScreen() {
               onSubmitEditing={sendMessage}
               returnKeyType="send"
               editable={!loading}
+            />
+            <MicrophoneButton
+              onTextRecognized={handleTextRecognized}
+              disabled={loading}
+              className="mr-2"
             />
             <TouchableOpacity
               onPress={sendMessage}
