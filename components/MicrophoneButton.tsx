@@ -1,7 +1,7 @@
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import React from "react";
-import { Animated, TouchableOpacity, View } from "react-native";
+import { Animated, Text, TouchableOpacity, View } from "react-native";
 
 interface MicrophoneButtonProps {
   onTextRecognized?: (text: string) => void;
@@ -20,6 +20,7 @@ export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({
 }) => {
   const {
     isRecording,
+    isTranscribing,
     startRecording,
     stopRecording,
     recognizedText,
@@ -37,7 +38,7 @@ export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({
 
   // Handle recording animation
   React.useEffect(() => {
-    if (isRecording && showRecordingIndicator) {
+    if ((isRecording || isTranscribing) && showRecordingIndicator) {
       Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
@@ -55,9 +56,11 @@ export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({
     } else {
       pulseAnim.setValue(1);
     }
-  }, [isRecording, pulseAnim, showRecordingIndicator]);
+  }, [isRecording, isTranscribing, showRecordingIndicator, pulseAnim]);
 
   const handlePress = async () => {
+    if (disabled || isTranscribing) return;
+
     if (isRecording) {
       await stopRecording();
     } else {
@@ -65,23 +68,41 @@ export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({
     }
   };
 
-  const buttonStyle = {
-    transform: [{ scale: pulseAnim }],
+  const getIconName = () => {
+    if (isTranscribing) return "hourglass";
+    return isRecording ? "stop" : "mic.fill";
+  };
+
+  const getIconColor = () => {
+    if (isTranscribing) return "#FFA500"; // Orange for transcribing
+    if (isRecording) return "#FF0000"; // Red for recording
+    return "#22347C"; // Default blue
   };
 
   return (
-    <View>
-      <Animated.View style={buttonStyle}>
+    <View className={`relative ${className}`}>
+      <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
         <TouchableOpacity
           onPress={handlePress}
-          className={`rounded-full p-2 ${isRecording ? "bg-red-500" : "bg-gray-400"} ${className}`}
-          disabled={disabled}
+          disabled={disabled || isTranscribing}
+          className={`rounded-full p-2 ${
+            isRecording || isTranscribing ? "bg-red-100" : "bg-gray-100"
+          }`}
         >
-          <IconSymbol name="mic.fill" size={size} color="#fff" />
+          <IconSymbol
+            name={getIconName() as any}
+            size={size}
+            color={getIconColor()}
+          />
         </TouchableOpacity>
       </Animated.View>
-      {isRecording && showRecordingIndicator && (
-        <View className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
+
+      {isTranscribing && (
+        <View className="absolute -bottom-6 left-1/2 transform -translate-x-1/2">
+          <Text className="text-xs text-orange-600 font-medium">
+            Transcribing...
+          </Text>
+        </View>
       )}
     </View>
   );

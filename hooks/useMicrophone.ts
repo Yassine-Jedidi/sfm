@@ -1,9 +1,11 @@
+import { transcribeAudio, validateAudioFile } from '@/services/whisper';
 import { Audio } from 'expo-av';
-import { useEffect, useState } from 'react';
-import { Alert, Platform } from 'react-native';
+import { useState } from 'react';
+import { Alert } from 'react-native';
 
 interface UseMicrophoneReturn {
   isRecording: boolean;
+  isTranscribing: boolean;
   startRecording: () => Promise<void>;
   stopRecording: () => Promise<void>;
   recognizedText: string;
@@ -12,38 +14,9 @@ interface UseMicrophoneReturn {
 
 export const useMicrophone = (): UseMicrophoneReturn => {
   const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
-  const [recognition, setRecognition] = useState<any>(null);
   const [recognizedText, setRecognizedText] = useState('');
-
-  // Initialize speech recognition for web
-  useEffect(() => {
-    if (Platform.OS === 'web' && 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-      const recognitionInstance = new SpeechRecognition();
-      recognitionInstance.continuous = false;
-      recognitionInstance.interimResults = false;
-      recognitionInstance.lang = 'en-US';
-
-      recognitionInstance.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setRecognizedText(transcript);
-        setIsRecording(false);
-      };
-
-      recognitionInstance.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        setIsRecording(false);
-        Alert.alert('Error', 'Speech recognition failed. Please try again.');
-      };
-
-      recognitionInstance.onend = () => {
-        setIsRecording(false);
-      };
-
-      setRecognition(recognitionInstance);
-    }
-  }, []);
 
   // Request audio permissions
   const requestPermissions = async (): Promise<boolean> => {
@@ -58,14 +31,7 @@ export const useMicrophone = (): UseMicrophoneReturn => {
   // Start recording
   const startRecording = async (): Promise<void> => {
     try {
-      if (Platform.OS === 'web' && recognition) {
-        // Use Web Speech API for web
-        recognition.start();
-        setIsRecording(true);
-        return;
-      }
-
-      // Use expo-av for mobile platforms
+      // Use expo-av for all platforms (web and mobile)
       const hasPermission = await requestPermissions();
       if (!hasPermission) return;
 
@@ -88,13 +54,7 @@ export const useMicrophone = (): UseMicrophoneReturn => {
   // Stop recording and process speech
   const stopRecording = async (): Promise<void> => {
     try {
-      if (Platform.OS === 'web' && recognition) {
-        // Stop web speech recognition
-        recognition.stop();
-        return;
-      }
-
-      // Stop mobile recording
+      // Stop recording
       if (!recording) return;
 
       setIsRecording(false);
@@ -103,10 +63,28 @@ export const useMicrophone = (): UseMicrophoneReturn => {
       setRecording(null);
 
       if (uri) {
-        // For mobile platforms, we'll show a placeholder
-        // In a real app, you would send the audio file to a speech-to-text service
-        const text = "Voice input detected (speech-to-text would be implemented here)";
-        setRecognizedText(text);
+        try {
+          // Validate audio file before sending
+          const isValid = await validateAudioFile(uri);
+          if (!isValid) {
+            throw new Error('Invalid audio file');
+          }
+
+          // Send audio to whisper service for transcription
+          setIsTranscribing(true);
+          const transcript = await transcribeAudio({
+            audioUri: uri,
+            audioType: 'audio/m4a',
+            fileName: 'recording.m4a',
+            model: 'whisper-large-v3-turbo',
+          });
+          setRecognizedText(transcript);
+        } catch (error) {
+          console.error('Transcription failed:', error);
+          setRecognizedText('Transcription failed. Please try again.');
+        } finally {
+          setIsTranscribing(false);
+        }
       }
     } catch (err) {
       console.error('Failed to stop recording', err);
@@ -121,6 +99,7 @@ export const useMicrophone = (): UseMicrophoneReturn => {
 
   return {
     isRecording,
+    isTranscribing,
     startRecording,
     stopRecording,
     recognizedText,

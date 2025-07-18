@@ -23,7 +23,10 @@ export default function ChatScreen() {
   const sendMessage = async () => {
     if (input.trim() === "") return;
     console.log("Sending prompt:", input);
-    setMessages((prev) => [...prev, { text: input, fromMe: true }]);
+    setMessages((prev) => [
+      ...prev,
+      { id: Date.now(), text: input, fromMe: true },
+    ]);
     setInput("");
     setLoading(true);
     try {
@@ -32,13 +35,20 @@ export default function ChatScreen() {
       const data = await sendChatPrompt(input, token || "", userId || "");
       console.log("API response:", data);
       if (data.output) {
-        setMessages((prev) => [...prev, { text: data.output, fromMe: false }]);
+        setMessages((prev) => [
+          ...prev,
+          { id: Date.now() + 1, text: data.output, fromMe: false },
+        ]);
       }
     } catch (e) {
       console.log("API error:", e);
       setMessages((prev) => [
         ...prev,
-        { text: "Erreur réseau ou serveur.", fromMe: false },
+        {
+          id: Date.now() + 1,
+          text: "Erreur réseau ou serveur.",
+          fromMe: false,
+        },
       ]);
     } finally {
       setLoading(false);
@@ -60,7 +70,9 @@ export default function ChatScreen() {
           <FlatList
             ref={flatListRef}
             data={messages}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item, index) =>
+              item.id?.toString() || index.toString()
+            }
             renderItem={({ item }) => (
               <View
                 className={`mb-2 flex-row ${item.fromMe ? "justify-end" : "justify-start"}`}
