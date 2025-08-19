@@ -19,6 +19,7 @@ export default function ChatScreen() {
   const [input, setInput] = useState("");
   const flatListRef = useRef<FlatList<any>>(null);
   const [loading, setLoading] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
 
   const sendMessage = async (messageText?: string) => {
     const textToSend = (messageText ?? input).trim();
@@ -26,7 +27,7 @@ export default function ChatScreen() {
     console.log("Sending prompt:", textToSend);
     setMessages((prev) => [
       ...prev,
-      { id: Date.now(), text: textToSend, fromMe: false },
+      { id: Date.now(), text: textToSend, fromMe: true },
     ]);
     setInput("");
     setLoading(true);
@@ -57,8 +58,15 @@ export default function ChatScreen() {
   };
 
   const handleTextRecognized = (text: string) => {
-    setInput(text);
-    sendMessage(text);
+    // Add the transcribed text output as a system response
+    setMessages((prev) => [
+      ...prev,
+      { id: Date.now(), text: text, fromMe: false },
+    ]);
+  };
+
+  const handleTranscribingState = (transcribing: boolean) => {
+    setIsTranscribing(transcribing);
   };
 
   return (
@@ -92,6 +100,25 @@ export default function ChatScreen() {
                 </View>
               </View>
             )}
+            ListFooterComponent={
+              loading || isTranscribing ? (
+                <View className="mb-2 flex-row justify-start">
+                  <View className="max-w-[70%] px-4 py-2 rounded-lg bg-gray-200">
+                    <View className="flex-row items-center space-x-1">
+                      <View className="w-2 h-2 bg-gray-500 rounded-full animate-pulse"></View>
+                      <View
+                        className="w-2 h-2 bg-gray-500 rounded-full animate-pulse"
+                        style={{ animationDelay: "0.2s" }}
+                      ></View>
+                      <View
+                        className="w-2 h-2 bg-gray-500 rounded-full animate-pulse"
+                        style={{ animationDelay: "0.4s" }}
+                      ></View>
+                    </View>
+                  </View>
+                </View>
+              ) : null
+            }
             contentContainerStyle={{ padding: 16, paddingBottom: 8 }}
             onContentSizeChange={() =>
               flatListRef.current?.scrollToEnd({ animated: true })
@@ -109,8 +136,9 @@ export default function ChatScreen() {
             />
             <MicrophoneButton
               onTextRecognized={handleTextRecognized}
-              disabled={loading}
+              disabled={loading || isTranscribing}
               className="mr-2"
+              onTranscribingState={handleTranscribingState}
             />
             <TouchableOpacity
               onPress={() => sendMessage()}

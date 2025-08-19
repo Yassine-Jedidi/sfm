@@ -1,10 +1,11 @@
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import React from "react";
-import { Animated, Text, TouchableOpacity, View } from "react-native";
+import { Animated, TouchableOpacity, View } from "react-native";
 
 interface MicrophoneButtonProps {
   onTextRecognized?: (text: string) => void;
+  onTranscribingState?: (transcribing: boolean) => void;
   disabled?: boolean;
   size?: number;
   className?: string;
@@ -13,6 +14,7 @@ interface MicrophoneButtonProps {
 
 export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({
   onTextRecognized,
+  onTranscribingState,
   disabled = false,
   size = 24,
   className = "",
@@ -35,6 +37,13 @@ export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({
       resetRecognizedText();
     }
   }, [recognizedText, onTextRecognized, resetRecognizedText]);
+
+  // Handle transcription state changes
+  React.useEffect(() => {
+    if (onTranscribingState) {
+      onTranscribingState(isTranscribing);
+    }
+  }, [isTranscribing, onTranscribingState]);
 
   // Handle recording animation
   React.useEffect(() => {
@@ -98,11 +107,7 @@ export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({
       </Animated.View>
 
       {isTranscribing && (
-        <View className="absolute -bottom-6 left-1/2 transform -translate-x-1/2">
-          <Text className="text-xs text-orange-600 font-medium">
-            Transcribing...
-          </Text>
-        </View>
+        <View className="absolute -bottom-6 left-1/2 transform -translate-x-1/2"></View>
       )}
     </View>
   );
