@@ -4,6 +4,7 @@ export interface WhisperTranscriptionResponse {
   transcript?: string;
   text?: string;
   error?: string;
+  output?: string;
 }
 
 export interface WhisperTranscriptionRequest {
@@ -19,7 +20,9 @@ export interface WhisperTranscriptionRequest {
  * @returns Promise with transcription result
  */
 export const transcribeAudio = async (
-  request: WhisperTranscriptionRequest
+  request: WhisperTranscriptionRequest,
+  token: string,
+  userId: string
 ): Promise<string> => {
   try {
     // Create form data with the audio file
@@ -45,19 +48,21 @@ export const transcribeAudio = async (
       {
         headers: {
           'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`,
+          'idUser': userId,
         },
       }
     );
 
     const result = response.data;
-    
+    console.log('result:', result);
     // Handle potential error in response
-    if (result.error) {
+    if (result?.error) {
       throw new Error(result.error);
     }
-
+    console.log('Whisper transcription result:', result);
     // Return transcript or text, fallback to completion message
-    return result.transcript || result.text || '';
+    return result.transcript || result.text || result.output || '';
   } catch (error) {
     console.error('Whisper transcription error:', error);
     

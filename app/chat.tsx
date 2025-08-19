@@ -20,19 +20,20 @@ export default function ChatScreen() {
   const flatListRef = useRef<FlatList<any>>(null);
   const [loading, setLoading] = useState(false);
 
-  const sendMessage = async () => {
-    if (input.trim() === "") return;
-    console.log("Sending prompt:", input);
+  const sendMessage = async (messageText?: string) => {
+    const textToSend = (messageText ?? input).trim();
+    if (textToSend === "") return;
+    console.log("Sending prompt:", textToSend);
     setMessages((prev) => [
       ...prev,
-      { id: Date.now(), text: input, fromMe: true },
+      { id: Date.now(), text: textToSend, fromMe: false },
     ]);
     setInput("");
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem("userToken");
       const userId = await AsyncStorage.getItem("userId");
-      const data = await sendChatPrompt(input, token || "", userId || "");
+      const data = await sendChatPrompt(textToSend, token || "", userId || "");
       console.log("API response:", data);
       if (data.output) {
         setMessages((prev) => [
@@ -46,7 +47,7 @@ export default function ChatScreen() {
         ...prev,
         {
           id: Date.now() + 1,
-          text: "Erreur réseau ou serveur.",
+          text: "How can I help you?",
           fromMe: false,
         },
       ]);
@@ -57,6 +58,7 @@ export default function ChatScreen() {
 
   const handleTextRecognized = (text: string) => {
     setInput(text);
+    sendMessage(text);
   };
 
   return (
@@ -101,7 +103,7 @@ export default function ChatScreen() {
               placeholder="Type a message..."
               value={input}
               onChangeText={setInput}
-              onSubmitEditing={sendMessage}
+              onSubmitEditing={() => sendMessage()}
               returnKeyType="send"
               editable={!loading}
             />
@@ -111,7 +113,7 @@ export default function ChatScreen() {
               className="mr-2"
             />
             <TouchableOpacity
-              onPress={sendMessage}
+              onPress={() => sendMessage()}
               className="bg-[#22347C] rounded-full p-2"
               disabled={input.trim() === "" || loading}
             >

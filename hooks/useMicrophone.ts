@@ -1,4 +1,5 @@
 import { transcribeAudio, validateAudioFile } from '@/services/whisper';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Audio } from 'expo-av';
 import { useState } from 'react';
 import { Alert } from 'react-native';
@@ -72,13 +73,16 @@ export const useMicrophone = (): UseMicrophoneReturn => {
 
           // Send audio to whisper service for transcription
           setIsTranscribing(true);
+          const token = await AsyncStorage.getItem("userToken");
+          const userId = await AsyncStorage.getItem("userId");
           const transcript = await transcribeAudio({
             audioUri: uri,
             audioType: 'audio/m4a',
             fileName: 'recording.m4a',
             model: 'whisper-large-v3-turbo',
-          });
+          }, token || '', userId || '');
           setRecognizedText(transcript);
+          console.log('Transcript:', transcript);
         } catch (error) {
           console.error('Transcription failed:', error);
           setRecognizedText('Transcription failed. Please try again.');
